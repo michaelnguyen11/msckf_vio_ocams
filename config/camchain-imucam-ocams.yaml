@@ -1,0 +1,92 @@
+%YAML:1.0
+
+# parameters for image processor module
+grid_row: 4
+grid_col: 5
+grid_min_feature_num: 3
+grid_max_feature_num: 4
+
+pyramid_levels: 3
+batch_size: 15
+fast_threshold: 20
+max_iteration: 10
+track_precision: 0.01
+ransac_threshold: 3
+stereo_threshold: 3
+
+camera_width: 640
+camera_height: 480
+
+# parameters for msckf vio module
+gyro_noise_density: 0.002443
+gyro_random_walk: 1.8e-07
+acc_noise_density: 0.01377
+acc_random_walk: 2.25e-05
+
+gyro_bias_cov: 1e-4
+acc_bias_cov: 1e-2
+velocity_cov: 0.25
+extrinsic_rotation_cov: 3.0462e-4
+extrinsic_translation_cov: 1e-4
+
+position_std_threshold: 8.0
+rotation_threshold: 0.2618
+translation_threshold: -1.0
+tracking_rate_threshold: 0.5
+max_cam_state_size: 20
+#
+# Below is the output file from Kalibr
+#
+# The modifications of the output file from Kalibr:
+# 1. For each matrix (e.g. cam0/T_cam_imu), remove the brackets and minus sign for each line. Use one pair of brackets for each matrix.
+# 2. Add the T_imu_body at the end of the calibration file (usually set to identity).
+cam0:
+  T_cam_imu: !!opencv-matrix
+    rows: 4
+    cols: 4
+    dt: d
+    data:
+      [-0.001827859233177992, -0.999909119974655, 0.013357047657805154, 0.030298330137844887,
+      0.0039387461853423456, -0.013364165204938133, -0.9999029379729119, 0.028682372533570984,
+      0.9999905725601166, -0.0017750717969459706, 0.003962816044752765, -0.014747523214162677,
+      0.0, 0.0, 0.0, 1.0]
+  camera_model: pinhole
+  distortion_coeffs: [-0.42043079243082415, 0.17943796968267525, 0.001076434028030149, 0.0001262795742828665]
+  distortion_model: radtan
+  intrinsics: [476.5276506138121, 477.5658674099076, 322.13201141536763, 251.6888047500246]
+  resolution: [640, 480]
+  timeshift_cam_imu: 0.02231090112310099
+cam1:
+  T_cam_imu: !!opencv-matrix
+    rows: 4
+    cols: 4
+    dt: d
+    data:
+      [-0.008382154257505742, -0.9999532504652721, 0.00482041221684304, -0.08958472628850654,
+      0.006913259577842834, -0.004878415733911984, -0.9999642033102668, 0.028854934277130317,
+      0.99994097142382, -0.00834852944320319, 0.006953828019388014, -0.015662499900516994,
+      0.0, 0.0, 0.0, 1.0]
+  T_cn_cnm1: !!opencv-matrix
+    rows: 4
+    cols: 4
+    dt: d
+    data:
+      [0.9999420825622907, 0.008510580920464224, -0.006587984015209744, -0.12022256172433968,
+      -0.008491233601698718, 0.9999595702862754, 0.0029591797526304676, 0.0004746321347084293,
+      0.006612902003644948, -0.0029030682532840716, 0.9999739205208336, -0.001032454297023307,
+      0.0, 0.0, 0.0, 1.0]
+  camera_model: pinhole
+  distortion_coeffs: [-0.39917090467699634, 0.14291611576969254, 0.0014625341710505651, -0.00039552081000661826]
+  distortion_model: radtan
+  intrinsics: [475.47838075294345, 476.7007734658888, 336.79659727527036, 248.1906906652168]
+  resolution: [640, 480]
+  timeshift_cam_imu: 0.02160793225304283
+T_imu_body: !!opencv-matrix
+  rows: 4
+  cols: 4
+  dt: d
+  data:
+   [1.0000, 0.0000, 0.0000, 0.0000,
+    0.0000, 1.0000, 0.0000, 0.0000,
+    0.0000, 0.0000, 1.0000, 0.0000,
+    0.0000, 0.0000, 0.0000, 1.0000]

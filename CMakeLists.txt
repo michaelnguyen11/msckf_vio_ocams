@@ -1,173 +1,40 @@
-cmake_minimum_required(VERSION 2.8.12)
-project(msckf_vio)
+cmake_minimum_required(VERSION 3.6)
+project(dynim-dns-vio-algo)
 
-add_compile_options(-std=c++11)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+include(${CMAKE_SOURCE_DIR}/cmake/pkg_check_modules_wrapper.cmake)
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR})
 
-# Modify cmake module path if new .cmake files are required
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake")
+# try using c++17, if c++17 does not find, a previous standard will be used
+set(CMAKE_CXX_STANDARD 17)
 
-find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  std_msgs
-  tf
-  nav_msgs
-  sensor_msgs
-  geometry_msgs
-  eigen_conversions
-  tf_conversions
-  random_numbers
-  message_generation
-  nodelet
-  image_transport
-  cv_bridge
-  message_filters
-  pcl_conversions
-  pcl_ros
-  std_srvs
-)
+# Find packages
+find_package( OpenCV REQUIRED )
+find_package( glog REQUIRED )
 
-## System dependencies are found with CMake's conventions
-find_package(Boost REQUIRED)
-find_package(Eigen3 REQUIRED)
-find_package(OpenCV REQUIRED)
-find_package(SuiteSparse REQUIRED)
+# Create a new interface of eigen3 when cross-compile
+# otherwise, use default cmake/FindSuiteSparse.cmake
+if(CMAKE_SYSROOT)
+    set(Eigen3_INCLUDE_DIRS ${CMAKE_SYSROOT}/usr/include/eigen3)
 
-##################
-## ROS messages ##
-##################
-add_message_files(
-  FILES
+    # Create imported target Eigen3::Eigen
+    add_library(Eigen3::Eigen INTERFACE IMPORTED)
 
-  FeatureMeasurement.msg
-  CameraMeasurement.msg
-  TrackingInfo.msg
-)
+    set_target_properties(Eigen3::Eigen PROPERTIES
+  	INTERFACE_INCLUDE_DIRECTORIES "${Eigen3_INCLUDE_DIRS}"
+    )
 
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-)
-
-###################################
-## catkin specific configuration ##
-###################################
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES msckf_vio image_processor
-  CATKIN_DEPENDS
-    roscpp std_msgs tf nav_msgs sensor_msgs geometry_msgs
-    eigen_conversions tf_conversions random_numbers message_runtime
-    image_transport cv_bridge message_filters pcl_conversions
-    pcl_ros std_srvs
-  DEPENDS Boost EIGEN3 OpenCV SUITESPARSE
-)
-
-###########
-## Build ##
-###########
-
-include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
-  ${EIGEN3_INCLUDE_DIR}
-  ${Boost_INCLUDE_DIR}
-  ${OpenCV_INCLUDE_DIRS}
-  ${SUITESPARSE_INCLUDE_DIRS}
-)
-
-# Msckf Vio
-add_library(msckf_vio
-  src/msckf_vio.cpp
-  src/utils.cpp
-)
-add_dependencies(msckf_vio
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS}
-)
-target_link_libraries(msckf_vio
-  ${catkin_LIBRARIES}
-  ${SUITESPARSE_LIBRARIES}
-)
-
-# Msckf Vio nodelet
-add_library(msckf_vio_nodelet
-  src/msckf_vio_nodelet.cpp
-)
-add_dependencies(msckf_vio_nodelet
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS}
-)
-target_link_libraries(msckf_vio_nodelet
-  msckf_vio
-  ${catkin_LIBRARIES}
-)
-
-# Image processor
-add_library(image_processor
-  src/image_processor.cpp
-  src/utils.cpp
-)
-add_dependencies(image_processor
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS}
-)
-target_link_libraries(image_processor
-  ${catkin_LIBRARIES}
-  ${OpenCV_LIBRARIES}
-)
-
-# Image processor nodelet
-add_library(image_processor_nodelet
-  src/image_processor_nodelet.cpp
-)
-add_dependencies(image_processor_nodelet
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${catkin_EXPORTED_TARGETS}
-)
-target_link_libraries(image_processor_nodelet
-  image_processor
-  ${catkin_LIBRARIES}
-)
-
-#############
-## Install ##
-#############
-
-install(TARGETS
-  msckf_vio msckf_vio_nodelet image_processor image_processor_nodelet
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  PATTERN "*_nodelet.h" EXCLUDE
-)
-
-install(FILES nodelets.xml
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
-
-#############
-## Testing ##
-#############
-
-if(CATKIN_ENABLE_TESTING)
-  # Feature initialization test
-  catkin_add_gtest(test_feature_init
-    test/feature_initialization_test.cpp
-  )
-  add_dependencies(test_feature_init
-    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS}
-  )
-  target_link_libraries(test_feature_init
-    ${catkin_LIBRARIES}
-  )
-
-  # Math utils test
-  catkin_add_gtest(test_math_utils
-    test/math_utils_test.cpp
-  )
+else()
+    find_package( Eigen3 3.3 REQUIRED NO_MODULE )
 endif()
+
+find_package( SuiteSparse REQUIRED )
+find_package( Boost COMPONENTS system REQUIRED )
+find_package( Pangolin REQUIRED )
+
+include_directories("src/")
+add_subdirectory(src)
+add_subdirectory(tests)
+
+file(GLOB DATA_FILES "config/*.*")
+file(COPY ${DATA_FILES} DESTINATION ${PROJECT_BINARY_DIR}/config)
